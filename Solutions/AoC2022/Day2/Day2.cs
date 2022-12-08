@@ -4,7 +4,7 @@ using System.Text;
 namespace AoC2022.Day2
 
 {
-    class Day2 : BaseDay
+    class Day : BaseDay
     {
         // WIN - DRAW - LOSE values
         int[] gameRewards = new int[3] { 6, 3, 0 };

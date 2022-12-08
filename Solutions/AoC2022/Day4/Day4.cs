@@ -2,7 +2,7 @@
 using System.Linq;
 namespace AoC2022.Day4 
 {
-    public class Day4 : BaseDay
+    public class Day : BaseDay
     {
         public override string FirstPart()
         {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 namespace AoC2022.Day3
 {
-    public class Day3 : BaseDay
+    public class Day : BaseDay
     {
         public int getItemValue(char item) 
         {
