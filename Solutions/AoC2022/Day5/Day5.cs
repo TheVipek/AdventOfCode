@@ -117,6 +117,7 @@ namespace AoC2022.Day5
                 elementsAmount -= 1;
                 
             }
+            //ShowStacks(stacks);
 
 
         }
@@ -145,6 +146,7 @@ namespace AoC2022.Day5
                 stacks[toStackIdx].Add(elements.Pop());
 
             }
+            //ShowStacks(stacks);
         }
         public string TopElements(Dictionary<int, List<char>> stacks)
         {
