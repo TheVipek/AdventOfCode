@@ -17,8 +17,8 @@ namespace AoC
             
             
             //MANUALLY
-            AoC2022.Day10.Day newDay = new AoC2022.Day10.Day();
-            newDay.Run("Day10");
+            AoC2022.Day11.Day newDay = new AoC2022.Day11.Day();
+            newDay.Run("Day11Example");
         }
         public void runSolution()
         {
