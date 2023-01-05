@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.Versioning;
 using System.Xml.Linq;
+using System.Reflection.Metadata.Ecma335;
 
 namespace AoC2022.Day12
 {
@@ -12,33 +13,17 @@ namespace AoC2022.Day12
     {
         public char Data { get; private set; }
         public List<Node> Neighbours { get; private set; } = new List<Node>();
-        //public int[] Position { get; private set; }
         public Node(char data)
         {
             Data = data;
         }
         public Node GetNode() => this;
-        //public ArrayList GetNeighbours()
-        //{
-        //    return new ArrayList() {
-        //    new int[2]{ Position[0] - 1, Position[1] }, // x-1
-        //    new int[2]{ Position[0] + 1, Position[1] }, // x+1
-        //    new int[2]{ Position[0], Position[1] - 1 }, // y-1
-        //    new int[2]{ Position[0], Position[1] + 1 }  // y+1
-        //    };
-        //}
-        //public void Set(char data, int[] position)
-        //{
-        //    this.Data = data;
-        //    this.Position = position;
-        //}
         public void Set(char data) => this.Data = data;
+
         public void AddNeighbour(Node neighbour) => Neighbours.Add(neighbour);
-        //public void Set(int[] position) => this.Position = position;
     }
     public class Heightmap
     {
-        // public List<Node> Verticies { get; } = new List<Node>();
         public Node[][] Verticies { get; private set; }
         public Node StartPoint { get; private set; }
         public Node EndPoint { get; private set; }
@@ -51,8 +36,8 @@ namespace AoC2022.Day12
         {
             CreateHeightmap(stringMap);
 
-            //StartPoint = FindPointWithName('S');
-            //EndPoint = FindPointWithName('E');
+            StartPoint = FindPointWithName('S');
+            EndPoint = FindPointWithName('E');
             StartPoint.Set('a');
             EndPoint.Set('z');
             SetAllNeighbours();
@@ -72,10 +57,7 @@ namespace AoC2022.Day12
                 for (int j = 0; j < stringMap[i].Length; j++)
                 {
                     //Filling heightmap
-                    // AddVertex(new Node(stringMap[i][j], new int[2] { i, j }));
                     AddVertex(i, j, new Node(stringMap[i][j]));
-                    if (stringMap[i][j] == 'S') StartPoint = Verticies[i][j];
-                    else if (stringMap[i][j] == 'E') EndPoint = Verticies[i][j];
                 }
             }
         }
@@ -84,14 +66,37 @@ namespace AoC2022.Day12
         /// </summary>
         /// <param name="data">Name of point</param>
         /// <returns></returns>
-       // public Node FindPointWithName(char data) => Verticies.Where(x => x == data).FirstOrDefault(defaultValue: null);
+        public Node FindPointWithName(char data)
+        {
+            for (int i = 0; i < Verticies.Length; i++)
+            { 
+                for(int j = 0; j < Verticies[i].Length;j++)
+                {
+                    if (Verticies[i][j].Data == data) return Verticies[i][j];
+                }
+            }
+            return null;
+        }
         /// <summary>
-        /// Returns point at exact position
+        /// Return list of points
         /// </summary>
         /// <param name="data"></param>
-        /// <param name="position"></param>
         /// <returns></returns>
-        //public Node FindPointWithPosition(int[] position) => Verticies.Where(x => x.Position.SequenceEqual(second: position)).FirstOrDefault(defaultValue: null);
+        public List<Node> FindPointsWithName(char data)
+        {
+            List<Node> nodes = new List<Node>();
+            for (int i = 0; i < Verticies.Length; i++)
+            {
+                for (int j = 0; j < Verticies[i].Length; j++)
+                {
+                    if (Verticies[i][j].Data == data) nodes.Add(Verticies[i][j]);
+                }
+            }
+            return nodes;
+        }
+        /// <summary>
+        /// Set neighbours for all nodes
+        /// </summary>
         private void SetAllNeighbours()
         {
             for (int i = 0; i < Verticies.Length; i++)
@@ -117,7 +122,6 @@ namespace AoC2022.Day12
             Node verticle
             ) =>
             Verticies[x][y] = verticle;
-        // Verticies.Add(verticle);
 
     }
 
@@ -134,48 +138,28 @@ namespace AoC2022.Day12
             Heightmap heightmap = new Heightmap(inputContent);
             Dictionary<Node, int> paths;
             int shortestRouteX = int.MaxValue;
-            //Default start point
-            shortestRouteX = int.MaxValue;
-
-            //var _heightmap = heightmap.Verticies.Where(x => x.Data == 'a').Select(x => x);
-            //foreach (var item in _heightmap)
-            //{
-            //    paths = Dijkstra(heightmap, item);
-            //    if (paths[heightmap.EndPoint] < shortestRouteX) shortestRouteX = paths[heightmap.EndPoint];
-            //}
-            for (int i = 0; i < heightmap.Verticies.Length; i++)
+            List<Node> wantedPoints = heightmap.FindPointsWithName('a');
+            foreach (Node node in wantedPoints)
             {
-                for (int j = 0; j < heightmap.Verticies[i].Length; j++)
-                {
-                    if(heightmap.Verticies[i][j].Data == 'a')
-                    {
-                        paths = Dijkstra(heightmap, heightmap.Verticies[i][j]);
-                        if (paths[heightmap.EndPoint] < shortestRouteX) shortestRouteX = paths[heightmap.EndPoint];
-                    }
-                }
+                paths = Dijkstra(heightmap, node);
+                if (paths[heightmap.EndPoint] < shortestRouteX) shortestRouteX = paths[heightmap.EndPoint];
             }
-            //foreach (var item in heightmap.Verticies)
-            //{
-            //    if (item.Data == 'a')
-            //    {
-            //        paths = Dijkstra(heightmap, item);
-            //        if (paths[heightmap.EndPoint] < shortestRouteX) shortestRouteX = paths[heightmap.EndPoint];
-            //    }
-
-            //}
             return shortestRouteX.ToString();
 
         }
         public Dictionary<Node,int> Dijkstra(Heightmap heightmap, Node start)
         {
+            //if start parameter is different,we want change it for heightmap
             if (start != heightmap.StartPoint) heightmap.SetStart(start);
+            //queue for getting element with smallest priority
             PriorityQueue<Node, int> priorityQueue = new PriorityQueue<Node, int>();
-            List<Node> visitedElements = new List<Node>();
+            //tracking visited elements
+            //List<Node> visitedElements = new List<Node>();
             Dictionary<Node, int> distance = new Dictionary<Node, int>();
             Dictionary<Node, Node> previousNodes = new Dictionary<Node, Node>();
             distance.Add(start, 0);
             priorityQueue.Enqueue(start, 0);
-            visitedElements.Add(start);
+            //visitedElements.Add(start);
 
             for (int i = 0; i < heightmap.Verticies.Length; i++)
             {
@@ -184,42 +168,21 @@ namespace AoC2022.Day12
                     if (heightmap.Verticies[i][j] != start) distance.Add(heightmap.Verticies[i][j], int.MaxValue);
                 }
             }
-            //foreach (Node node in heightmap.Verticies)
-            //{
-            //    if(node != start) distance.Add(node, int.MaxValue);
-            //}
             while (priorityQueue.Count > 0)
             {
                 Node smallestElement = priorityQueue.Dequeue();
 
-                //foreach (int[] neighbour in smallestElement.GetNeighbours())
                 foreach(Node neighbour in smallestElement.Neighbours)
                 {
-                    //Node _neighbour = heightmap.FindPointWithPosition(neighbour);
-
-                    //if (_neighbour == null) continue;
-                    //int higherSteps;
-                    //higherSteps = (int)_neighbour.Data - (int)smallestElement.Data;
-                    ////Which means that it wasn't explored yet and its at the same step or one higher ,which allow us to move 
-                    //if (!visitedElements.Contains(_neighbour) && higherSteps <= 1)
-                    //{
-                    //    int altDistance = distance[smallestElement] + 1;
-
-                    //    if(altDistance < distance[_neighbour])
-                    //    {
-                    //        distance[_neighbour] = altDistance;
-                    //        previousNodes[_neighbour] = smallestElement;
-                    //        priorityQueue.Enqueue(_neighbour, altDistance);
-                    //    }
-                    //}
-                    if (neighbour == null) continue;
                     int higherSteps;
                     higherSteps = (int)neighbour.Data - (int)smallestElement.Data;
                     //Which means that it wasn't explored yet and its at the same step or one higher ,which allow us to move 
-                    if (!visitedElements.Contains(neighbour) && higherSteps <= 1)
+                    if (
+                        //!visitedElements.Contains(neighbour) && 
+                        higherSteps <= 1)
                     {
                         int altDistance = distance[smallestElement] + 1;
-
+                      //  visitedElements.Add(neighbour);
                         if (altDistance < distance[neighbour])
                         {
                             distance[neighbour] = altDistance;
@@ -229,6 +192,7 @@ namespace AoC2022.Day12
                     }
                 }
             }
+           
             return distance;
         }
     }
