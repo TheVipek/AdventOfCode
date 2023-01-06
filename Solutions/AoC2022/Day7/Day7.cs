@@ -72,7 +72,6 @@ namespace AoC2022.Day7
             List<KeyValuePair<string, int>> allDirectories = new List<KeyValuePair<string, int>>();
             //All directories size
             int totalDiskSpace = 70000000;
-            int needSpace = 30000000;
             int totalSize = 0;
             foreach (var input in inputContent)
             {
