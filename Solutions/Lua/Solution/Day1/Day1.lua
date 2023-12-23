@@ -46,38 +46,42 @@ function daySolution.GetSolution()
         local sum = 0;
 
         local firstNumber, lastNumber;
-        local len, mid;
         local leftChar, rightChar;
+        local foundFirst, foundLast;
+        local len;
         for line in string.gmatch(data, "[^\r\n]+") do
             firstNumber, lastNumber = "", "";
-            local len = #line
+            foundFirst, foundLast = false, false;
+            len = #line
 
-            for i = 1, len, 1 do
-
-                if tonumber(firstNumber) and tonumber(lastNumber) then
+            for i = 1, len do
+                if (foundFirst and foundLast) then
                     break
                 end
 
-                if tonumber(firstNumber) == nil then
-                    leftChar = string.sub(line, i, i);
+                if not foundFirst then
+                    leftChar = line:sub(i, i);
                     if tonumber(leftChar) then
                         firstNumber = leftChar;
+                        foundFirst = true;
                     else
                         firstNumber = LettersIntoNumbers(firstNumber .. leftChar, letterNumbers);
+                        foundFirst = tonumber(firstNumber) ~= nil;
                     end
                 end
 
-                if tonumber(lastNumber) == nil then
-                    rightChar = string.sub(line, len - i + 1, len - i + 1);
+                if not foundLast then
+                    rightChar = line:sub(len - i + 1, len - i + 1);
                     if tonumber(rightChar) then
                         lastNumber = rightChar;
+                        foundLast = true;
                     else
                         lastNumber = LettersIntoNumbers(rightChar .. lastNumber, letterNumbers);
+                        foundLast = tonumber(lastNumber) ~= nil;
                     end
                 end
             end
             sum = sum + tonumber(firstNumber .. lastNumber);
-
         end
 
         return sum;

@@ -16,6 +16,6 @@ print("Part1 execution time:" .. methodProfiler.Mesaure(function()
     return sol.Part1(data);
 end));
 
-print("Part1 execution time:" .. methodProfiler.Mesaure(function()
+print("Part2 execution time:" .. methodProfiler.Mesaure(function()
     return sol.Part2(data);
 end));
