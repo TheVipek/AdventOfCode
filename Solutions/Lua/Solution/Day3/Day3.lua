@@ -24,8 +24,10 @@ local function CreateGrid(data)
     local lineIdx = 1;
 
     for line in string.gmatch(data, "[^\r\n]+") do
+        --ROW
         table[lineIdx] = {};
         for charIdx = 1, #line do
+            --COLUMN IN ROW
             table[lineIdx][charIdx] = line:sub(charIdx, charIdx);
         end
         lineIdx = lineIdx + 1;
@@ -33,17 +35,26 @@ local function CreateGrid(data)
     return table;
 end
 
-local function isSymbol(char)
-    return ~(char == ".") and ~(string.match(char, "[%w]"));
+local function DisplayAllData(grid)
+    print("COLUMN", "ROW");
+    for column, row in ipairs(grid) do
+        local rowStr = "";
+        for i = 1, #row do
+            rowStr = rowStr .. row[i];
+        end
+        print(column, rowStr);
+    end
 end
 
+local function isSymbol(char)
+    return char ~= "." and not string.match(char, "[%w]");
+end
 
 local function GetDigitsWithTheirPosition(row)
     local digits = {};
     for idx, val in ipairs(row) do
-        if (string.match(val, "(%d)")) then
-            digits[idx] = val;
-            --table.insert(digits, { index = idx, digit = val });
+        if (val:match("%d")) then
+            digits[#digits + 1] = { index = idx, digit = val };
         end
     end
     return digits;
@@ -51,15 +62,11 @@ end
 
 local function IsAdjacentToSymbol(grid, column, row)
     local targetRow, targetColumn;
-    for idx, offset in ipairs(SYMBOL_OFFSETS) do
-        targetColumn = grid[column + offset[1]];
-        if (targetColumn) then
-            targetRow = targetColumn[row + offset[2]];
-            if (targetRow) then
-                if (isSymbol(targetRow)) then
-                    return true;
-                end
-            end
+    for _, offset in ipairs(SYMBOL_OFFSETS) do
+        targetColumn = column + offset[1];
+        targetRow = row + offset[2];
+        if (grid[targetColumn] and grid[targetColumn][targetRow] and isSymbol(grid[targetColumn][targetRow])) then
+            return true;
         end
     end
     return false;
@@ -67,34 +74,31 @@ end
 
 local function GetAllValidNumbers(digitsInRow, column, grid)
     local validNumbers = {};
+    local numberParts = {};
 
-    local lastKey;
-    local number = "";
     local adjacented = false;
-    for k, v in pairs(digitsInRow) do
-        number = number .. v;
-        if (IsAdjacentToSymbol(grid, column, k)) then
+    local digitPos, digit;
+
+    for idx, value in ipairs(digitsInRow) do
+        digitPos = value.index;
+        digit = value.digit;
+
+        table.insert(numberParts, digit);
+        if (IsAdjacentToSymbol(grid, column, digitPos)) then
             adjacented = true;
         end
 
-        -- Handle situation where there's break between two digits (in grid it would be symbol)
-        if (digitsInRow[k + 1] == nil) then
-            if (adjacented) then
-                table.insert(validNumbers, number);
+        if digitsInRow[idx + 1] == nil or digitsInRow[idx + 1].index - digitPos > 1 then
+            if adjacented then
+                validNumbers[#validNumbers + 1] = tonumber(table.concat(numberParts));
                 adjacented = false;
             end
-            number = "";
+            numberParts = {};
         end
-        lastKey = k;
     end
-
-    -- There were digits to end of dictionary keys
-    if (adjacented) and digitsInRow[lastKey] ~= nil then
-        table.insert(validNumbers, number);
-    end
-
     return validNumbers;
 end
+
 
 
 function daySolution.GetSolution()
@@ -104,12 +108,13 @@ function daySolution.GetSolution()
         local sum = 0;
         local grid = CreateGrid(data);
         for column, row in ipairs(grid) do
-            local validNumbers = GetAllValidNumbers(GetDigitsWithTheirPosition(row), column, grid);
-            print("VALID NUMBERS:");
+            local digitsWithPos = GetDigitsWithTheirPosition(row);
+            local validNumbers = GetAllValidNumbers(digitsWithPos, column, grid);
             for i = 1, #validNumbers do
-                print(validNumbers[i]);
+                sum = sum + validNumbers[i];
             end
         end
+        return sum;
     end
 
     sol.Part2 = function(data)
