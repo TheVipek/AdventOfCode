@@ -13,7 +13,6 @@ local socket = require "socket";
 ---@param func method that is being called inside profiler
 ---@return execution time in ms
 function methodProfiler.Mesaure(func)
-    -- do it suing LuaSOCKET later
     local startTime = socket.gettime() * 1000;
     func();
     return ((socket.gettime() * 1000) - startTime);
