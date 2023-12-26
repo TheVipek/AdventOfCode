@@ -3,27 +3,12 @@ daySolution = {}
 package.path = package.path .. ";../Utilities/?.lua"
 local solutionCreatorModule = require "solutionCreator";
 
---[[
-    [1] == Column,
-    [2] == Row
-]]
---
-local SYMBOL_OFFSETS = {
-    { 0,  1 },
-    { 0,  -1 },
-    { 1,  0 },
-    { -1, 0 },
-    { 1,  1 },
-    { 1,  -1 },
-    { -1, 1 },
-    { -1, -1 }
-};
-
-local function CreateGrid(data)
+-- Create 2D grid from the input data
+local function CreateGrid(gridData)
     local table = {};
     local lineIdx = 1;
 
-    for line in string.gmatch(data, "[^\r\n]+") do
+    for line in string.gmatch(gridData, "[^\r\n]+") do
         --ROW
         table[lineIdx] = {};
         for charIdx = 1, #line do
@@ -35,70 +20,174 @@ local function CreateGrid(data)
     return table;
 end
 
-local function DisplayAllData(grid)
+-- Display rows and columns
+local function DisplayGridData(grid)
     print("COLUMN", "ROW");
     for column, row in ipairs(grid) do
-        local rowStr = "";
+        local concenatedRow = {};
         for i = 1, #row do
-            rowStr = rowStr .. row[i];
+            table.insert(concenatedRow, row[i]);
         end
-        print(column, rowStr);
+        print(column, table.concat(concenatedRow));
     end
 end
 
-local function isSymbol(char)
-    return char ~= "." and not string.match(char, "[%w]");
+-- PART 1 RELATED
+
+local function IsSymbol(character)
+    return not string.match(character, "[%w.]");
 end
 
-local function GetDigitsWithTheirPosition(row)
+-- Get all digits from depending on given pattern
+local function GetValuesWithTheirPositions(row, digitPattern)
     local digits = {};
-    for idx, val in ipairs(row) do
-        if (val:match("%d")) then
-            digits[#digits + 1] = { index = idx, digit = val };
+    for i, v in ipairs(row) do
+        if (v:match(digitPattern)) then
+            digits[#digits + 1] = { idx = i, val = v };
         end
     end
     return digits;
 end
 
-local function IsAdjacentToSymbol(grid, column, row)
-    local targetRow, targetColumn;
-    for _, offset in ipairs(SYMBOL_OFFSETS) do
-        targetColumn = column + offset[1];
-        targetRow = row + offset[2];
-        if (grid[targetColumn] and grid[targetColumn][targetRow] and isSymbol(grid[targetColumn][targetRow])) then
+
+local adjacentSymbolCache = {};
+
+-- Chechk whether character on grid[x][y] has any symbol near it
+local function HasAdjacentSymbol(grid, x, y)
+    local cacheKey = tostring(x) .. ":" .. tostring(y);
+
+    if adjacentSymbolCache[cacheKey] ~= nil then
+        return adjacentSymbolCache[cacheKey];
+    end
+
+    local offsets = {
+        { 0,  1 },
+        { 0,  -1 },
+        { 1,  0 },
+        { -1, 0 },
+        { 1,  1 },
+        { 1,  -1 },
+        { -1, 1 },
+        { -1, -1 }
+    };
+    for _, offset in ipairs(offsets) do
+        local targetX, targetY = x + offset[1], y + offset[2];
+        if (grid[targetX] and grid[targetX][targetY] and IsSymbol(grid[targetX][targetY])) then
+            adjacentSymbolCache[cacheKey] = true;
             return true;
         end
     end
+    adjacentSymbolCache[cacheKey] = false;
     return false;
 end
 
-local function GetAllValidNumbers(digitsInRow, column, grid)
+-- Get all digits that have adjacent symbol near it
+local function GetValidAdjacentNumbers(IdxDigitTable, y, grid)
     local validNumbers = {};
-    local numberParts = {};
+    local currentNumberParts = {};
 
-    local adjacented = false;
-    local digitPos, digit;
+    local isAdjacent = false;
+    local currentDigitPosition, currentDigit;
 
-    for idx, value in ipairs(digitsInRow) do
-        digitPos = value.index;
-        digit = value.digit;
+    for idx, value in ipairs(IdxDigitTable) do
+        currentDigitPosition = value.idx;
+        currentDigit = value.val;
 
-        table.insert(numberParts, digit);
-        if (IsAdjacentToSymbol(grid, column, digitPos)) then
-            adjacented = true;
+        if not isAdjacent then
+            isAdjacent = HasAdjacentSymbol(grid, y, currentDigitPosition);
         end
 
-        if digitsInRow[idx + 1] == nil or digitsInRow[idx + 1].index - digitPos > 1 then
-            if adjacented then
-                validNumbers[#validNumbers + 1] = tonumber(table.concat(numberParts));
-                adjacented = false;
+        table.insert(currentNumberParts, currentDigit);
+
+        if IdxDigitTable[idx + 1] == nil or IdxDigitTable[idx + 1].idx - currentDigitPosition > 1 then
+            if isAdjacent then
+                validNumbers[#validNumbers + 1] = tonumber(table.concat(currentNumberParts));
+                isAdjacent = false;
             end
-            numberParts = {};
+            currentNumberParts = {};
         end
     end
     return validNumbers;
 end
 
+
+-- PART 2 RELATED
+
+local function IsGear(character)
+    return character == "*";
+end
+
+local function reverseTable(table)
+    for i = 1, math.floor(#table / 2) do
+        table[i], table[#table - i + 1] = table[#table - i + 1], table[i]
+    end
+end
+
+-- Get all numbers that are going from grid[x][y] in direction
+local function GetNumber(grid, x, y, direction)
+    local currentRow = y;
+    local number = {};
+    while true do
+        if (grid[x][currentRow] and string.match(grid[x][currentRow], "%d")) then
+            table.insert(number, grid[x][currentRow]);
+        else
+            break;
+        end
+        currentRow = currentRow + direction;
+    end
+    return number;
+end
+
+-- Similar to GetNumber, although it handle sitaution where between number can be break
+local function GetHorizontalNumbers(grid, x, y)
+    local numbers = {};
+    local numberOnLeft = GetNumber(grid, x, y - 1, -1);
+    reverseTable(numberOnLeft);
+    local numberOnRight = GetNumber(grid, x, y + 1, 1);
+
+    if string.match(grid[x][y], "%d") then
+        -- If the current cell contains a number, concatenate left and right numbers with the current cell's number.
+        table.insert(numbers, tonumber(table.concat(numberOnLeft) .. grid[x][y] .. table.concat(numberOnRight)));
+    else
+        -- If the current cell does not contain a number, add left and right numbers separately if they exist.
+        if #numberOnLeft > 0 then
+            table.insert(numbers, tonumber(table.concat(numberOnLeft)));
+        end
+        if #numberOnRight > 0 then
+            table.insert(numbers, tonumber(table.concat(numberOnRight)));
+        end
+    end
+    return numbers;
+end
+
+-- Get all numbers around specified position
+local function GetAllNumbersAround(grid, x, y)
+    local allNumbers = {};
+    for _, offset in ipairs({ { 0, 1 }, { 0, -1 }, { 1, 0 }, { -1, 0 } }) do
+        local adjacentRow, adjacentColumn = x + offset[2], y + offset[1];
+
+        if (grid[adjacentRow] and grid[adjacentRow][adjacentColumn]) then
+            local numbers;
+            if offset[1] ~= 0 then
+                -- Vertical search
+                numbers = table.concat(GetNumber(grid, adjacentRow, adjacentColumn, offset[1]));
+                if #numbers > 0 then
+                    local num = tonumber(offset[1] == -1 and string.reverse(numbers) or numbers);
+                    if num then table.insert(allNumbers, num) end
+                end
+            else
+                --Horizontal search
+
+                numbers = GetHorizontalNumbers(grid, adjacentRow, adjacentColumn)
+                for _, num in ipairs(numbers) do
+                    if num then table.insert(allNumbers, num) end
+                end
+            end
+        end
+    end
+
+    return allNumbers;
+end
 
 
 function daySolution.GetSolution()
@@ -106,10 +195,10 @@ function daySolution.GetSolution()
 
     sol.Part1 = function(data)
         local sum = 0;
-        local grid = CreateGrid(data);
-        for column, row in ipairs(grid) do
-            local digitsWithPos = GetDigitsWithTheirPosition(row);
-            local validNumbers = GetAllValidNumbers(digitsWithPos, column, grid);
+        local gridData = CreateGrid(data);
+        for rowIndex, row in ipairs(gridData) do
+            local valuesWithPos = GetValuesWithTheirPositions(row, "%d");
+            local validNumbers = GetValidAdjacentNumbers(valuesWithPos, rowIndex, gridData);
             for i = 1, #validNumbers do
                 sum = sum + validNumbers[i];
             end
@@ -118,7 +207,19 @@ function daySolution.GetSolution()
     end
 
     sol.Part2 = function(data)
-
+        local sum = 0;
+        local gridData = CreateGrid(data);
+        for rowIndex, row in ipairs(gridData) do
+            for charIndex, character in ipairs(row) do
+                if IsGear(character) then
+                    local gearNumbers = GetAllNumbersAround(gridData, rowIndex, charIndex)
+                    if (#gearNumbers == 2) then
+                        sum = sum + (gearNumbers[1] * gearNumbers[2]);
+                    end
+                end
+            end
+        end
+        return sum;
     end
 
     return sol;
