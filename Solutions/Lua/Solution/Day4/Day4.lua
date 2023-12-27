@@ -32,7 +32,8 @@ CardContainer = {}
 
 function CardContainer:New()
     local o = {
-        winningNumbers = {}
+        winningNumbers = {},
+        winningNumbersCount = 0
     };
     setmetatable(o, { __index = CardContainer });
     return o;
@@ -44,6 +45,7 @@ end
 
 function CardContainer:AddWinningNumber(number)
     self.winningNumbers[number] = self.winningNumbers[number] + 1
+    self.winningNumbersCount = self.winningNumbersCount + 1;
 end
 
 local function SetupSpecifiedCardInfo(cardInstance, dataForCard)
@@ -61,14 +63,8 @@ end
 local function SumCardWinningNumbers(allCards)
     local sum = 0;
     local winningNumbersCount;
-    local winningNumbers;
     for i = 1, #allCards do
-        winningNumbersCount = 0;
-        winningNumbers = allCards[i].winningNumbers;
-
-        for _, value in pairs(winningNumbers) do
-            winningNumbersCount = winningNumbersCount + value;
-        end
+        winningNumbersCount = allCards[i].winningNumbersCount;
 
         if (winningNumbersCount > 0) then
             sum = sum + (2 ^ (winningNumbersCount - 1));
@@ -77,6 +73,7 @@ local function SumCardWinningNumbers(allCards)
     return sum;
 end
 local function GetTotalCardsInstances(allCards)
+    local sum = 0;
     local totalCardInstances = {};
     for cardIdx = 1, #allCards do
         local winningNumbers = allCards[cardIdx].winningNumbers;
@@ -93,11 +90,7 @@ local function GetTotalCardsInstances(allCards)
                 until i >= value
             end
         end
-    end
-
-    local sum = 0;
-    for i = 1, #totalCardInstances do
-        sum = sum + totalCardInstances[i];
+        sum = sum + totalCardInstances[cardIdx];
     end
     return sum;
 end
