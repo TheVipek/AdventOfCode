@@ -46,52 +46,99 @@ function CardContainer:AddWinningNumber(number)
     self.winningNumbers[number] = self.winningNumbers[number] + 1
 end
 
+local function SetupSpecifiedCardInfo(cardInstance, dataForCard)
+    for i = 1, #dataForCard do
+        cardInstance:InitializeWinningNumber(dataForCard[i]);
+    end
+end
+local function AddWiningNumbersToCardInstance(cardInstance, winningNumbersData)
+    for i = 1, #winningNumbersData do
+        if (cardInstance.winningNumbers[winningNumbersData[i]]) then
+            cardInstance:AddWinningNumber(winningNumbersData[i]);
+        end
+    end
+end
+local function SumCardWinningNumbers(allCards)
+    local sum = 0;
+    local winningNumbersCount;
+    local winningNumbers;
+    for i = 1, #allCards do
+        winningNumbersCount = 0;
+        winningNumbers = allCards[i].winningNumbers;
+
+        for _, value in pairs(winningNumbers) do
+            winningNumbersCount = winningNumbersCount + value;
+        end
+
+        if (winningNumbersCount > 0) then
+            sum = sum + (2 ^ (winningNumbersCount - 1));
+        end
+    end
+    return sum;
+end
+local function GetTotalCardsInstances(allCards)
+    local totalCardInstances = {};
+    for cardIdx = 1, #allCards do
+        local winningNumbers = allCards[cardIdx].winningNumbers;
+
+        totalCardInstances[cardIdx] = (totalCardInstances[cardIdx] or 0) + 1;
+        local i = 1;
+        for _, value in pairs(winningNumbers) do
+            if (value > 0) then
+                repeat
+                    local targetIdx = cardIdx + i;
+                    totalCardInstances[targetIdx] = (totalCardInstances[targetIdx] or 0) +
+                        (1 * totalCardInstances[cardIdx]);
+                    i = i + 1;
+                until i >= value
+            end
+        end
+    end
+
+    local sum = 0;
+    for i = 1, #totalCardInstances do
+        sum = sum + totalCardInstances[i];
+    end
+    return sum;
+end
+
 function daySolution.GetSolution()
     local solution = solutionCreatorModule.CreateSolution();
 
     solution.Part1 = function(data)
         local allCards = {};
-        local allCardInfo, specifiedCardInfo, winningNumbersCard;
+        local cardInfo;
         for line in string.gmatch(data, "[^\r\n]+") do
-            allCardInfo = GetScratchCardLine(line);
+            cardInfo = GetScratchCardLine(line);
 
             local card = CardContainer:New();
 
-            specifiedCardInfo = allCardInfo[1];
-            for i = 1, #specifiedCardInfo do
-                card:InitializeWinningNumber(specifiedCardInfo[i]);
-            end
+            SetupSpecifiedCardInfo(card, cardInfo[1]);
 
-            winningNumbersCard = allCardInfo[2];
-            for i = 1, #winningNumbersCard do
-                if (card.winningNumbers[winningNumbersCard[i]]) then
-                    card:AddWinningNumber(winningNumbersCard[i]);
-                end
-            end
+            AddWiningNumbersToCardInstance(card, cardInfo[2]);
+
             allCards[#allCards + 1] = card;
         end
 
-        local sum = 0;
-        local winningNumbersCount;
-        local winningNumbers;
-        for i = 1, #allCards do
-            winningNumbersCount = 0;
-            winningNumbers = allCards[i].winningNumbers;
-
-            for _, value in pairs(winningNumbers) do
-                winningNumbersCount = winningNumbersCount + value;
-            end
-
-            if (winningNumbersCount > 0) then
-                sum = sum + (2 ^ (winningNumbersCount - 1));
-            end
-        end
-
-        return sum;
+        return SumCardWinningNumbers(allCards);
     end
 
     solution.Part2 = function(data)
+        local allCards = {};
+        local cardInfo;
+        for line in string.gmatch(data, "[^\r\n]+") do
+            cardInfo = GetScratchCardLine(line);
 
+            local card = CardContainer:New();
+
+            SetupSpecifiedCardInfo(card, cardInfo[1]);
+
+            AddWiningNumbersToCardInstance(card, cardInfo[2]);
+
+            allCards[#allCards + 1] = card;
+        end
+
+        return GetTotalCardsInstances(allCards);
     end
 
     return solution;
