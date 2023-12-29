@@ -1,6 +1,4 @@
 package.path = package.path .. ";Utilities/?.lua";
-print(package.path);
-print(package.cpath);
 local inputHandlerModule = require "inputHandler";
 local methodProfiler = require "methodProfiler";
 print("Enter day of AoC2023");
