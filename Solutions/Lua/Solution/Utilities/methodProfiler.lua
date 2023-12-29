@@ -14,8 +14,8 @@ local socket = require "socket";
 ---@return execution time in ms
 function methodProfiler.Mesaure(func)
     local startTime = socket.gettime() * 1000;
-    func();
-    return ((socket.gettime() * 1000) - startTime);
+    print("Result:" .. func());
+    return (socket.gettime() * 1000) - startTime;
 end
 
 return methodProfiler;
