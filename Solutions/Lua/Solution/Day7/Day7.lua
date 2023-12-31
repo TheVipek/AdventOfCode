@@ -122,8 +122,52 @@ local function SortHandByStrength_BubbleSort(hands)
         n = n - 1;
     until not swapped
 end
+local function Partition(arr, low, high)
+    local pivot = arr[high];
+    local i = low - 1;
+    local shouldSwap;
+    for j = low, high - 1 do
+        shouldSwap = false;
+        if arr[j].handKind < pivot.handKind then
+            shouldSwap = true;
+        elseif arr[j].handKind == pivot.handKind then
+            for k = 1, HAND_SIZE do
+                local pivotStrength = CardStrength[string.sub(pivot.handCards, k, k)];
+                local elementStrength = CardStrength[string.sub(arr[j].handCards, k, k)];
+                if pivotStrength < elementStrength then
+                    break;
+                elseif pivotStrength > elementStrength then
+                    shouldSwap = true;
+                    break;
+                end
+            end
+        end
+        if shouldSwap then
+            i = i + 1;
+            arr[i], arr[j] = arr[j], arr[i];
+        end
+    end
+    arr[i + 1], arr[high] = arr[high], arr[i + 1];
+    return i + 1;
+end
+local function SortByHandStrength_QuickSort(arr, low, high)
+    if low < high then
+        local pivotIdx = Partition(arr, low, high);
+        SortByHandStrength_QuickSort(arr, low, pivotIdx - 1);
+        SortByHandStrength_QuickSort(arr, pivotIdx + 1, high);
+    end
+end
 
 
+local function merge(arr, left, mid, right) end
+local function SortByHandStrength_MergeSort(arr, left, right)
+    if left < right then
+        local mid = math.floor((left + right) / 2);
+        SortByHandStrength_MergeSort(arr, left, mid);
+        SortByHandStrength_MergeSort(arr, mid + 1, right);
+        merge(arr, left, mid, right);
+    end
+end
 function daySolution.GetSolution()
     local solution = solutionCreatorModule.CreateSolution();
 
@@ -143,11 +187,12 @@ function daySolution.GetSolution()
             hands[#hands + 1] = hand;
         end
 
-        SortHandByStrength_BubbleSort(hands);
-
+        --SortHandByStrength_BubbleSort(hands);
+        SortByHandStrength_QuickSort(hands, 1, #hands);
         local sum = 0;
-        for i = #hands, 1, -1 do
-            sum = sum + hands[i].bidAmount * ((#hands - i) + 1);
+        for i = 1, #hands, 1 do
+            -- sum = sum + hands[i].bidAmount * ((#hands - i) + 1);
+            sum = sum + hands[i].bidAmount * i;
         end
 
         return sum;
