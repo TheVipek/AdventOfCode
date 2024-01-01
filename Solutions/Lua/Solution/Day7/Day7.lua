@@ -97,25 +97,24 @@ local function SortHandByStrength_BubbleSort(hands)
     repeat
         swapped = false;
         for i = 1, n - 1 do
-            local shouldSwap = false;
+            local leftElement = hands[i];
+            local rightElement = hands[i + 1];
 
-            if hands[i + 1].handKind > hands[i].handKind then
-                shouldSwap = true;
-            elseif hands[i + 1].handKind == hands[i].handKind then
+            if leftElement.handKind > rightElement.handKind then
+                hands[i], hands[i + 1] = hands[i + 1], hands[i];
+                swapped = true;
+            elseif leftElement.handKind == rightElement.handKind then
                 for k = 1, HAND_SIZE do
-                    local currElementStrength = CardStrength[string.sub(hands[i].handCards, k, k)];
-                    local nextElementStrength = CardStrength[string.sub(hands[i + 1].handCards, k, k)];
-                    if currElementStrength > nextElementStrength then
+                    local leftElementStrength = CardStrength[string.sub(leftElement.handCards, k, k)];
+                    local rightElementStrength = CardStrength[string.sub(rightElement.handCards, k, k)];
+                    if leftElementStrength > rightElementStrength then
+                        hands[i], hands[i + 1] = hands[i + 1], hands[i];
+                        swapped = true;
                         break;
-                    elseif currElementStrength < nextElementStrength then
-                        shouldSwap = true;
+                    elseif leftElementStrength < rightElementStrength then
                         break;
                     end
                 end
-            end
-            if shouldSwap then
-                hands[i], hands[i + 1] = hands[i + 1], hands[i];
-                swapped = true;
             end
         end
 
@@ -151,23 +150,87 @@ local function Partition(arr, low, high)
     return i + 1;
 end
 local function SortByHandStrength_QuickSort(arr, low, high)
-    if low < high then
-        local pivotIdx = Partition(arr, low, high);
-        SortByHandStrength_QuickSort(arr, low, pivotIdx - 1);
-        SortByHandStrength_QuickSort(arr, pivotIdx + 1, high);
+    if high <= low then return end;
+
+    local pivotIdx = Partition(arr, low, high);
+    SortByHandStrength_QuickSort(arr, low, pivotIdx - 1);
+    SortByHandStrength_QuickSort(arr, pivotIdx + 1, high);
+end
+
+local function Merge(leftArr, rightArr, arr)
+    local leftIndex, rightIndex, arrIndex = 1, 1, 1;
+    local leftSize = math.floor(#arr / 2);
+    local rightSize = #arr - leftSize;
+    while leftIndex <= leftSize and rightIndex <= rightSize do
+        local leftElement = leftArr[leftIndex];
+        local rightElement = rightArr[rightIndex];
+
+        if (leftElement.handKind < rightElement.handKind) then
+            arr[arrIndex] = leftArr[leftIndex];
+            leftIndex = leftIndex + 1;
+            arrIndex = arrIndex + 1;
+        elseif (leftElement.handKind == rightElement.handKind) then
+            for k = 1, HAND_SIZE do
+                local leftStrength = CardStrength[string.sub(leftElement.handCards, k, k)];
+                local rightStrength = CardStrength[string.sub(rightElement.handCards, k, k)];
+                if leftStrength < rightStrength then
+                    arr[arrIndex] = leftArr[leftIndex];
+                    leftIndex = leftIndex + 1;
+                    arrIndex = arrIndex + 1;
+                    break;
+                elseif leftStrength >= rightStrength then
+                    arr[arrIndex] = rightArr[rightIndex];
+                    rightIndex = rightIndex + 1;
+                    arrIndex = arrIndex + 1;
+                    break;
+                end
+            end
+        else
+            arr[arrIndex] = rightArr[rightIndex];
+            rightIndex = rightIndex + 1;
+            arrIndex = arrIndex + 1;
+        end
+    end
+
+    while leftIndex <= #leftArr do
+        arr[arrIndex] = leftArr[leftIndex];
+
+        leftIndex = leftIndex + 1;
+        arrIndex = arrIndex + 1;
+    end
+
+    while rightIndex <= #rightArr do
+        arr[arrIndex] = rightArr[rightIndex];
+
+        rightIndex = rightIndex + 1;
+        arrIndex = arrIndex + 1;
     end
 end
 
-
-local function merge(arr, left, mid, right) end
-local function SortByHandStrength_MergeSort(arr, left, right)
-    if left < right then
-        local mid = math.floor((left + right) / 2);
-        SortByHandStrength_MergeSort(arr, left, mid);
-        SortByHandStrength_MergeSort(arr, mid + 1, right);
-        merge(arr, left, mid, right);
+local function SortByHandStrength_MergeSort(arr)
+    local len = #arr;
+    if len <= 1 then
+        return;
     end
+
+    local lArr = {};
+    local rArr = {};
+    local mid = math.floor(len / 2);
+    for i = 1, len do
+        if i <= mid then
+            lArr[#lArr + 1] = arr[i];
+        else
+            rArr[#rArr + 1] = arr[i];
+        end
+    end
+    SortByHandStrength_MergeSort(lArr);
+    SortByHandStrength_MergeSort(rArr);
+
+    Merge(lArr, rArr, arr);
 end
+
+
+
 function daySolution.GetSolution()
     local solution = solutionCreatorModule.CreateSolution();
 
@@ -188,10 +251,11 @@ function daySolution.GetSolution()
         end
 
         --SortHandByStrength_BubbleSort(hands);
-        SortByHandStrength_QuickSort(hands, 1, #hands);
+        --SortByHandStrength_QuickSort(hands, 1, #hands);
+        SortByHandStrength_MergeSort(hands);
         local sum = 0;
         for i = 1, #hands, 1 do
-            -- sum = sum + hands[i].bidAmount * ((#hands - i) + 1);
+            --sum = sum + hands[i].bidAmount * ((#hands - i) + 1);
             sum = sum + hands[i].bidAmount * i;
         end
 
