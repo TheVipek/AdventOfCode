@@ -5,67 +5,6 @@
 #include <unordered_map>
 #include <vector>
 
-
-
-// class TrieNode {
-// public:
-//     std::vector<std::pair<char, TrieNode*>> Children;
-//     bool IsEndOfWord = false;
-//
-// };
-//
-// class TrieCreator {
-// public:
-//     TrieCreator(std::string input) : data(input) {
-//         translateData();
-//     }
-//     TrieNode* ConstructTrie() {
-//         TrieNode* root = new TrieNode();
-//
-//         for (int i =0; i < translatedData.size(); i++) {
-//             for (int j=0; j < translatedData[i].size(); j++) {
-//                 if (translatedData[i][j] == 'X') {
-//                     createChild(i, j, translatedData[i][j], root);
-//                 }
-//             }
-//         }
-//
-//         return root;
-//     }
-// private:
-//     const std::string data;
-//     std::vector<std::pair<int , int>> directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1},
-//                                                    {-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
-//     std::vector<std::vector<char>> translatedData;
-//
-//     void createChild(const int& x, const int& y, const char ch, TrieNode* parent) {
-//         TrieNode* node = new TrieNode();
-//
-//
-//
-//     }
-//     void translateData() {
-//         translatedData.clear();
-//
-//         char ch;
-//         std::istringstream stream(data);
-//
-//         int currentLine = 0;
-//         while (stream.get(ch)) {
-//             if (!std::isspace(ch)) {
-//                 if (translatedData.size() < currentLine + 1) {
-//                     translatedData.emplace_back();
-//                 }
-//                 translatedData[currentLine].push_back(ch);
-//             }
-//             else if (ch == '\n') {
-//                 currentLine++;
-//             }
-//         }
-//
-//
-//     }
-// };
 std::string Day4::SolvePart1(std::string input) {
     std::vector<std::vector<char>> translatedData;
     char ch;
