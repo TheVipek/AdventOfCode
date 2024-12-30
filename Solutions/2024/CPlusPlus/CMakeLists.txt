@@ -22,5 +22,7 @@ add_executable(CPlusPlus
         Solutions/Day2.cpp
         Solutions/Day3.h
         Solutions/Day3.cpp
+        Solutions/Day4.cpp
+        Solutions/Day4.h
 
 )
