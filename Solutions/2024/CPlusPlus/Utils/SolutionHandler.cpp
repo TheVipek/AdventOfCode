@@ -9,6 +9,7 @@
 #include "Day1.h"
 #include "Day3.h"
 #include "Day4.h"
+#include "Day5.h"
 
 SolutionHandler::SolutionHandler(
     std::string& solutionsFolderAbsPath, std::string& dayNamePrefix, std::string& sampleName, std::string& inputName
@@ -20,6 +21,7 @@ SolutionHandler::SolutionHandler(
     solutions[2] = new Day2();
     solutions[3] = new Day3();
     solutions[4] = new Day4();
+    solutions[5] = new Day5();
 }
 std::string SolutionHandler::getSample(const int& day) {
     std::string outputPath = solutionsFolderAbsPath + "\\" + dayNamePrefix + std::to_string(day) + "\\" + sampleName;
